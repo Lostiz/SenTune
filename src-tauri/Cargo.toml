@@ -1,0 +1,40 @@
+[package]
+name = "sentune"
+version = "0.1.0"
+description = "SenTune - Bilibili 音乐播放器"
+authors = ["Lostiz"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "sentune_lib"
+crate-type = ["staticlib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-single-instance = "2"
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "cookies", "charset", "http2", "blocking"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "fs", "io-util", "net", "sync", "process"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+tiny_http = "0.12"
+rfd = "0.15"
+md-5 = "0.10"
+hmac = "0.12"
+sha2 = "0.10"
+rand = "0.9"
+base64 = "0.22"
+thiserror = "2"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
