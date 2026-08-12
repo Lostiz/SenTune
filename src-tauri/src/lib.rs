@@ -8,6 +8,7 @@ mod api;
 mod cache;
 mod commands;
 mod db;
+mod local;
 mod logging;
 mod models;
 mod stream;
@@ -145,6 +146,19 @@ pub fn run() {
             commands::stream::get_stream_status,
             commands::stream::get_cover_url,
             commands::stream::get_proxy_port,
+            commands::local::pick_local_folder,
+            commands::local::add_local_folder,
+            commands::local::list_local_folders,
+            commands::local::remove_local_folder,
+            commands::local::rescan_local_folder,
+            commands::local::list_local_tracks,
+            commands::local::remove_local_track,
+            commands::local::add_local_favorite,
+            commands::local::remove_local_favorite,
+            commands::local::list_local_favorites,
+            commands::local::add_local_history,
+            commands::local::list_local_history,
+            commands::local::clear_local_history,
             commands::library::add_favorite,
             commands::library::remove_favorite,
             commands::library::list_favorites,

@@ -1,13 +1,32 @@
 import type { QueueItem } from "../stores/playerStore";
-import type { TrackInfo } from "../types/models";
+import type { LocalTrack, TrackInfo } from "../types/models";
 
 export function trackToQueueItem(track: TrackInfo): QueueItem {
   return {
+    source: "bili",
     bvid: track.bvid,
     cid: track.cid,
     title: track.title,
     cover: track.coverUrl,
     author: track.author,
+    duration: track.duration,
+  };
+}
+
+export function localTrackToQueueItem(
+  track: LocalTrack,
+  port: number,
+): QueueItem {
+  return {
+    source: "local",
+    bvid: `local:${track.id}`,
+    cid: track.id,
+    path: track.path,
+    title: track.title,
+    cover: track.coverPath
+      ? `http://127.0.0.1:${port}/local-cover/${track.id}`
+      : "",
+    author: track.artist || track.album || "本地音乐",
     duration: track.duration,
   };
 }

@@ -46,6 +46,45 @@ pub struct VideoPage {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct LocalTrack {
+    pub id: i64,
+    pub path: String,
+    pub folder_id: Option<i64>,
+    pub title: String,
+    pub artist: String,
+    pub album: String,
+    pub duration: u64,
+    pub codec: String,
+    pub size: u64,
+    pub modified_at: i64,
+    pub cover_path: Option<String>,
+    pub added_at: i64,
+    pub last_played_at: Option<i64>,
+    pub play_count: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalFolder {
+    pub id: i64,
+    pub path: String,
+    pub added_at: i64,
+    pub track_count: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalScanResult {
+    pub folder_id: i64,
+    pub path: String,
+    pub added: u64,
+    pub updated: u64,
+    pub removed: u64,
+    pub skipped: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AudioStream {
     pub url: String,
     pub backup_urls: Vec<String>,

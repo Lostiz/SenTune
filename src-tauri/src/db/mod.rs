@@ -7,11 +7,12 @@ use crate::models::ApiError;
 
 pub mod favorites;
 pub mod history;
+pub mod local;
 pub mod playlists;
 pub mod settings;
 pub mod tracks;
 
-const SCHEMA: &str = r#"
+pub(crate) const SCHEMA: &str = r#"
 CREATE TABLE IF NOT EXISTS tracks (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   bvid          TEXT NOT NULL,
@@ -64,6 +65,46 @@ CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS local_folders (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  path     TEXT NOT NULL UNIQUE,
+  added_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS local_tracks (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  path           TEXT NOT NULL UNIQUE,
+  folder_id      INTEGER,
+  title          TEXT NOT NULL,
+  artist         TEXT NOT NULL DEFAULT '',
+  album          TEXT NOT NULL DEFAULT '',
+  duration       INTEGER NOT NULL DEFAULT 0,
+  codec          TEXT NOT NULL DEFAULT '',
+  size           INTEGER NOT NULL DEFAULT 0,
+  modified_at    INTEGER NOT NULL DEFAULT 0,
+  cover_path     TEXT,
+  added_at       INTEGER NOT NULL,
+  last_played_at INTEGER,
+  play_count     INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_local_tracks_folder ON local_tracks(folder_id);
+CREATE INDEX IF NOT EXISTS idx_local_tracks_title ON local_tracks(title);
+
+CREATE TABLE IF NOT EXISTS local_favorites (
+  track_id   INTEGER PRIMARY KEY,
+  created_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS local_history (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  track_id  INTEGER NOT NULL,
+  played_at INTEGER NOT NULL
+);
+DELETE FROM local_history
+WHERE id NOT IN (SELECT MAX(id) FROM local_history GROUP BY track_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_local_history_track_id
+  ON local_history(track_id);
 "#;
 
 static DB: OnceLock<Mutex<Connection>> = OnceLock::new();

@@ -64,7 +64,7 @@ export function MiniPlayer() {
 
   useEffect(() => {
     setLocalCover(null);
-    if (!item) return;
+    if (!item || item.source === "local") return;
     let cancelled = false;
     void invoke<string>("get_cover_url", { bvid: item.bvid })
       .then((url) => {
@@ -151,7 +151,8 @@ export function MiniPlayer() {
   ]);
 
   const cover = localCover ?? remoteCover ?? item?.cover;
-  const fav = item ? isFavorite(item.bvid, item.cid) : false;
+  const fav =
+    item && item.source === "bili" ? isFavorite(item.bvid, item.cid) : false;
 
   return (
     <footer
@@ -196,33 +197,35 @@ export function MiniPlayer() {
                 </span>
               </span>
             </button>
-            <motion.span
-              key={fav ? "fav" : "unfav"}
-              className="mini-player__heart-wrap"
-              animate={fav ? { scale: [1, 1.25, 1] } : { scale: 1 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
-              <IconButton
-                icon={Heart}
-                weight={fav ? "fill" : "regular"}
-                label={fav ? "取消收藏" : "收藏"}
-                iconSize={16}
-                className={fav ? "mini-player__heart--active" : ""}
-                onClick={() => {
-                  if (fav) {
-                    void removeFavorite(item.bvid, item.cid).catch((error: unknown) =>
-                      showToast(String(error)),
-                    );
-                    showToast("已取消收藏");
-                  } else {
-                    void addFavorite(queueItemToTrackInfo(item)).catch(
-                      (error: unknown) => showToast(String(error)),
-                    );
-                    showToast("已收藏");
-                  }
-                }}
-              />
-            </motion.span>
+            {item.source === "bili" && (
+              <motion.span
+                key={fav ? "fav" : "unfav"}
+                className="mini-player__heart-wrap"
+                animate={fav ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <IconButton
+                  icon={Heart}
+                  weight={fav ? "fill" : "regular"}
+                  label={fav ? "取消收藏" : "收藏"}
+                  iconSize={16}
+                  className={fav ? "mini-player__heart--active" : ""}
+                  onClick={() => {
+                    if (fav) {
+                      void removeFavorite(item.bvid, item.cid).catch((error: unknown) =>
+                        showToast(String(error)),
+                      );
+                      showToast("已取消收藏");
+                    } else {
+                      void addFavorite(queueItemToTrackInfo(item)).catch(
+                        (error: unknown) => showToast(String(error)),
+                      );
+                      showToast("已收藏");
+                    }
+                  }}
+                />
+              </motion.span>
+            )}
           </div>
 
           <div className="mini-player__center">
@@ -307,11 +310,13 @@ export function MiniPlayer() {
               label="打开播放队列"
               onClick={toggleQueuePanel}
             />
-            <IconButton
-              icon={ListPlus}
-              label="添加到歌单"
-              onClick={() => openPicker(queueItemToTrackInfo(item))}
-            />
+            {item.source === "bili" && (
+              <IconButton
+                icon={ListPlus}
+                label="添加到歌单"
+                onClick={() => openPicker(queueItemToTrackInfo(item))}
+              />
+            )}
           </div>
         </>
       )}

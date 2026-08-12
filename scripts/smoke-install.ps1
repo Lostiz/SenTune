@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-$installer = "E:\BLIplayer\src-tauri\target\x86_64-pc-windows-gnu\release\bundle\nsis\SenTune_1.0.0_x64-setup.exe"
+$installer = "E:\BLIplayer\src-tauri\target\x86_64-pc-windows-gnu\release\bundle\nsis\SenTune_1.1.0_x64-setup.exe"
 $target = "C:\Users\Moon\AppData\Local\Temp\sentune-install-test"
 
 if (Test-Path $target) {

@@ -1,7 +1,7 @@
 [package]
 name = "sentune"
-version = "0.1.0"
-description = "SenTune - Bilibili 音乐播放器"
+version = "1.1.0"
+description = "SenTune - 轻量化网络播放器"
 authors = ["Lostiz"]
 edition = "2021"
 
@@ -28,6 +28,8 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "fs", 
 rusqlite = { version = "0.32", features = ["bundled"] }
 tiny_http = "0.12"
 rfd = "0.15"
+lofty = "0.22"
+walkdir = "2"
 md-5 = "0.10"
 hmac = "0.12"
 sha2 = "0.10"

@@ -7,6 +7,7 @@ import {
   House,
   Info,
   MagnifyingGlass,
+  MusicNotes,
   Playlist,
 } from "@phosphor-icons/react";
 import type { IconProps } from "@phosphor-icons/react";
@@ -21,6 +22,7 @@ export type PageId =
   | "playlists"
   | "favorites"
   | "history"
+  | "local"
   | "settings"
   | "about";
 
@@ -33,6 +35,7 @@ interface NavItem {
 const LIBRARY_ITEMS: NavItem[] = [
   { id: "home", label: "首页", icon: House },
   { id: "search", label: "搜索", icon: MagnifyingGlass },
+  { id: "local", label: "本地音乐", icon: MusicNotes },
   { id: "favorites", label: "个人收藏", icon: Heart },
   { id: "history", label: "播放历史", icon: ClockCounterClockwise },
 ];

@@ -2372,3 +2372,148 @@ h4 {
     animation: none;
   }
 }
+
+/* 本地音乐页 */
+.local-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.local-page__header h1 {
+  margin: 0;
+}
+
+.local-page__folders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.local-folder {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 4px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--surface-elevated);
+}
+
+.local-folder__select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background-color 150ms var(--ease-out-quart),
+    color 150ms var(--ease-out-quart);
+}
+
+.local-folder__select:hover,
+.local-folder__select--active {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.local-folder__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.local-folder__count {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.local-page__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 360px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  color: var(--text-tertiary);
+}
+
+.local-page__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.local-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.local-row {
+  cursor: pointer;
+}
+
+.local-row__cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.local-row__fav--active {
+  color: var(--accent);
+}
+
+.local-page__tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.local-page__tab {
+  padding: 6px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 150ms var(--ease-out-quart),
+    color 150ms var(--ease-out-quart),
+    border-color 150ms var(--ease-out-quart);
+}
+
+.local-page__tab:hover {
+  color: var(--text-primary);
+  border-color: var(--hairline-strong);
+}
+
+.local-page__tab--active {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}

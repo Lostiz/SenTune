@@ -12,6 +12,7 @@ dist
 dist-ssr
 release
 docs
+.learnings
 *.local
 
 # Editor directories and files

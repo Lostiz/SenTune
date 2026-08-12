@@ -1,11 +1,15 @@
 import { invoke } from "@tauri-apps/api/core";
 import { create } from "zustand";
 import { pauseAudio, playAudio, seekAudio, setAudioVolume } from "../lib/audioController";
-import type { VideoDetail, VideoItem } from "../types/models";
+import { getProxyPort } from "../lib/proxy";
+import { localTrackToQueueItem } from "../lib/track";
+import type { LocalTrack, VideoDetail, VideoItem } from "../types/models";
 
 export interface QueueItem {
+  source: "bili" | "local";
   bvid: string;
   cid: number;
+  path?: string;
   title: string;
   cover: string;
   author: string;
@@ -31,6 +35,7 @@ interface PlayerState {
   setQueue: (items: QueueItem[], startIndex: number) => void;
   enqueue: (item: QueueItem) => void;
   playItem: (item: QueueItem) => void;
+  playLocalTrack: (track: LocalTrack) => Promise<void>;
   playVideo: (item: VideoItem) => Promise<void>;
   playAt: (index: number) => Promise<void>;
   togglePlay: () => void;
@@ -157,6 +162,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       void playAt(index);
     }
   },
+  playLocalTrack: async (track) => {
+    const port = await getProxyPort();
+    const item = localTrackToQueueItem(track, port);
+    const { queue } = get();
+    const existing = queue.findIndex((entry) => entry.bvid === item.bvid);
+    if (existing >= 0) {
+      await get().playAt(existing);
+    } else {
+      const index = queue.length;
+      set({ queue: [...queue, item] });
+      await get().playAt(index);
+    }
+  },
   playVideo: async (item) => {
     let detail: VideoDetail;
     try {
@@ -170,6 +188,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const items: QueueItem[] =
       detail.pages.length > 1
         ? detail.pages.map((page) => ({
+            source: "bili",
             bvid: detail.bvid,
             cid: page.cid,
             title: `${detail.title} · ${page.part || `第 ${page.page} 集`}`,
@@ -179,6 +198,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
           }))
         : [
             {
+              source: "bili",
               bvid: detail.bvid,
               cid: detail.cid,
               title: detail.title,
@@ -277,6 +297,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const { queue, currentIndex } = get();
     const item = currentIndex === null ? null : queue[currentIndex];
     if (!item) return;
+    if (item.source === "local") return;
     const count = (retryCounts[item.bvid] ?? 0) + 1;
     if (count > 2) return;
     retryCounts[item.bvid] = count;
@@ -287,6 +308,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const { queue, currentIndex } = get();
     const item = currentIndex === null ? null : queue[currentIndex];
     if (!item) return;
+    if (item.source === "local") {
+      const port = await getProxyPort();
+      const url = `http://127.0.0.1:${port}/local?path=${encodeURIComponent(
+        item.path ?? "",
+      )}`;
+      if (get().currentIndex !== currentIndex) return;
+      set({
+        streamUrl: url,
+        streamId: null,
+        cachePercent: 0,
+        loadingStream: false,
+        playbackError: null,
+        currentAudioId: null,
+      });
+      void invoke("add_local_history", { id: item.cid }).catch(() => undefined);
+      return;
+    }
     try {
       const status = await invoke<StreamStatus>("start_stream", {
         bvid: item.bvid,

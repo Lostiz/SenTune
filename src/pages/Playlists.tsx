@@ -230,6 +230,7 @@ export function PlaylistsPage() {
                 count={detail.tracks.length}
                 onPlay={() => {
                   playItem({
+                    source: "bili",
                     bvid: track.bvid,
                     cid: track.cid,
                     title: track.title,

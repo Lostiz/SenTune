@@ -43,6 +43,17 @@ fn handle(request: Request, cache_root: &Path) -> io::Result<()> {
     if url.starts_with("/cover/remote") {
         return handle_cover_remote(request);
     }
+    if let Some(id) = url.strip_prefix("/local-cover/") {
+        let id = id
+            .split(['?', '/'])
+            .next()
+            .unwrap_or(id)
+            .to_string();
+        return handle_local_cover(request, &id);
+    }
+    if url.starts_with("/local") {
+        return handle_local(request);
+    }
     if let Some(id) = url.strip_prefix("/stream/") {
         let id = id
             .split(['?', '/'])
@@ -62,6 +73,113 @@ fn handle(request: Request, cache_root: &Path) -> io::Result<()> {
     }
     request
         .respond(Response::empty(StatusCode(404)))
+        .map_err(|error| io::Error::other(error))
+}
+
+fn handle_local(request: Request) -> io::Result<()> {
+    let raw = request.url().to_string();
+    let parsed = match reqwest::Url::parse(&format!("http://127.0.0.1{raw}")) {
+        Ok(url) => url,
+        Err(_) => {
+            return request
+                .respond(Response::empty(StatusCode(404)))
+                .map_err(|error| io::Error::other(error));
+        }
+    };
+    let Some(path) = parsed
+        .query_pairs()
+        .find(|(key, _)| key == "path")
+        .map(|(_, value)| value.into_owned())
+    else {
+        return request
+            .respond(Response::empty(StatusCode(404)))
+            .map_err(|error| io::Error::other(error));
+    };
+    {
+        let guard = crate::db::connection()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if !crate::db::local::is_allowed_path(&guard, &path) {
+            return request
+                .respond(Response::empty(StatusCode(404)))
+                .map_err(|error| io::Error::other(error));
+        }
+    }
+    let file_path = PathBuf::from(&path);
+    if !file_path.is_file() {
+        return request
+            .respond(Response::empty(StatusCode(404)))
+            .map_err(|error| io::Error::other(error));
+    }
+    let content_type = crate::local::content_type_for_path(&file_path);
+    let total = std::fs::metadata(&file_path)
+        .map_err(|error| io::Error::other(error))?
+        .len();
+    let range_header = request
+        .headers()
+        .iter()
+        .find(|h| h.field.equiv("Range"))
+        .map(|h| h.value.as_str().to_string());
+    if let Some(range) = range_header {
+        let (start, end) = parse_range(&range, total);
+        return serve_file(request, &file_path, start, end, total, content_type);
+    }
+    let file = File::open(&file_path)?;
+    let headers = vec![
+        header("Content-Type", content_type),
+        header("Content-Length", total.to_string()),
+        header("Accept-Ranges", "bytes"),
+    ];
+    let response = Response::new(StatusCode(200), headers, file, Some(total as usize), None);
+    request
+        .respond(response)
+        .map_err(|error| io::Error::other(error))
+}
+
+fn handle_local_cover(request: Request, id: &str) -> io::Result<()> {
+    let Ok(track_id) = id.parse::<i64>() else {
+        return request
+            .respond(Response::empty(StatusCode(404)))
+            .map_err(|error| io::Error::other(error));
+    };
+    let cover = {
+        let guard = crate::db::connection()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        crate::db::local::get_cover_path(&guard, track_id)
+            .map_err(|error| io::Error::other(error))?
+            .filter(|path| !path.is_empty())
+    };
+    let Some(cover) = cover else {
+        return request
+            .respond(Response::empty(StatusCode(404)))
+            .map_err(|error| io::Error::other(error));
+    };
+    let cover_path = PathBuf::from(cover);
+    if !cover_path.is_file() {
+        return request
+            .respond(Response::empty(StatusCode(404)))
+            .map_err(|error| io::Error::other(error));
+    }
+    let content_type = if cover_path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("png"))
+        .unwrap_or(false)
+    {
+        "image/png"
+    } else {
+        "image/jpeg"
+    };
+    let file = File::open(&cover_path)?;
+    let len = file.metadata()?.len();
+    let headers = vec![
+        header("Content-Type", content_type),
+        header("Content-Length", len.to_string()),
+    ];
+    let response = Response::new(StatusCode(200), headers, file, Some(len as usize), None);
+    request
+        .respond(response)
         .map_err(|error| io::Error::other(error))
 }
 

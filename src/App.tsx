@@ -11,6 +11,7 @@ import { HistoryPage } from "./pages/History";
 import { PlaylistsPage } from "./pages/Playlists";
 import { PlaylistPickerModal } from "./components/library/PlaylistPickerModal";
 import { AboutModal } from "./components/common/AboutModal";
+import { LocalPage } from "./pages/Local";
 import { useLibraryStore } from "./stores/libraryStore";
 import { useSettingsStore } from "./stores/settingsStore";
 
@@ -20,6 +21,7 @@ const PAGES: PageId[] = [
   "playlists",
   "favorites",
   "history",
+  "local",
   "settings",
 ];
 
@@ -29,6 +31,7 @@ const PAGE_TITLES: Record<PageId, string> = {
   playlists: "歌单",
   favorites: "收藏",
   history: "历史",
+  local: "本地音乐",
   settings: "设置",
   about: "关于",
 };
@@ -91,12 +94,14 @@ export default function App() {
           {page === "search" && <SearchPage />}
           {page === "favorites" && <FavoritesPage />}
           {page === "history" && <HistoryPage />}
+          {page === "local" && <LocalPage />}
           {page === "playlists" && <PlaylistsPage />}
           {page !== "home" &&
             page !== "settings" &&
             page !== "search" &&
             page !== "favorites" &&
             page !== "history" &&
+            page !== "local" &&
             page !== "playlists" && <PlaceholderPage page={page} />}
         </motion.div>
       </AppShell>

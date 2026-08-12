@@ -49,6 +49,39 @@ export interface TrackInfo {
   playCount: number;
 }
 
+export interface LocalTrack {
+  id: number;
+  path: string;
+  folderId: number | null;
+  title: string;
+  artist: string;
+  album: string;
+  duration: number;
+  codec: string;
+  size: number;
+  modifiedAt: number;
+  coverPath: string | null;
+  addedAt: number;
+  lastPlayedAt: number | null;
+  playCount: number;
+}
+
+export interface LocalFolder {
+  id: number;
+  path: string;
+  addedAt: number;
+  trackCount: number;
+}
+
+export interface LocalScanResult {
+  folderId: number;
+  path: string;
+  added: number;
+  updated: number;
+  removed: number;
+  skipped: number;
+}
+
 export interface FavoriteItem {
   track: TrackInfo;
   createdAt: number;
