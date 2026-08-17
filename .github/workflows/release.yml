@@ -1,0 +1,192 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64
+            platform: windows
+            runs-on: windows-latest
+            target: x86_64-pc-windows-gnu
+            toolchain: stable-x86_64-pc-windows-gnu
+            bundles: nsis
+            artifact-name: sentune-windows-x64
+            artifact-paths: |
+              src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/*.exe
+          - name: windows-arm64
+            platform: windows
+            runs-on: windows-latest
+            target: aarch64-pc-windows-msvc
+            toolchain: stable
+            bundles: nsis
+            artifact-name: sentune-windows-arm64
+            artifact-paths: |
+              src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe
+          - name: linux-amd64
+            platform: linux
+            runs-on: ubuntu-latest
+            target: ""
+            toolchain: stable
+            bundles: deb,rpm,appimage
+            artifact-name: sentune-linux-amd64
+            artifact-paths: |
+              src-tauri/target/release/bundle/deb/*.deb
+              src-tauri/target/release/bundle/rpm/*.rpm
+              src-tauri/target/release/bundle/appimage/*.AppImage
+          - name: linux-arm64
+            platform: linux
+            runs-on: ubuntu-latest
+            target: ""
+            toolchain: stable
+            bundles: deb,rpm,appimage
+            artifact-name: sentune-linux-arm64
+            artifact-paths: |
+              src-tauri/target/release/bundle/deb/*.deb
+              src-tauri/target/release/bundle/rpm/*.rpm
+              src-tauri/target/release/bundle/appimage/*.AppImage
+          - name: macos-universal
+            platform: macos
+            runs-on: macos-14
+            target: universal-apple-darwin
+            toolchain: stable
+            bundles: dmg,app
+            artifact-name: sentune-macos-universal
+            artifact-paths: |
+              src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+              src-tauri/target/universal-apple-darwin/release/bundle/macos/SenTune.app.zip
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.toolchain }}
+
+      - name: Add Rust targets
+        shell: bash
+        run: |
+          if [ "${{ matrix.target }}" = "universal-apple-darwin" ]; then
+            rustup target add x86_64-apple-darwin aarch64-apple-darwin
+          elif [ -n "${{ matrix.target }}" ]; then
+            rustup target add ${{ matrix.target }}
+          fi
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Set up MinGW (Windows x64)
+        id: msys2
+        if: matrix.name == 'windows-x64'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils mingw-w64-x86_64-headers
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build (Windows x64)
+        if: matrix.name == 'windows-x64'
+        shell: pwsh
+        env:
+          CC_x86_64_pc_windows_gnu: ${{ steps.msys2.outputs.msys2-location }}/mingw64/bin/x86_64-w64-mingw32-gcc.exe
+          AR_x86_64_pc_windows_gnu: ${{ steps.msys2.outputs.msys2-location }}/mingw64/bin/ar.exe
+          RANLIB_x86_64_pc_windows_gnu: ${{ steps.msys2.outputs.msys2-location }}/mingw64/bin/ranlib.exe
+        run: |
+          $msys2 = "${{ steps.msys2.outputs.msys2-location }}"
+          Write-Output "MSYS2_LOCATION=$msys2"
+          Write-Output "CC_x86_64_pc_windows_gnu=$env:CC_x86_64_pc_windows_gnu"
+          Write-Output "AR_x86_64_pc_windows_gnu=$env:AR_x86_64_pc_windows_gnu"
+          Write-Output "RANLIB_x86_64_pc_windows_gnu=$env:RANLIB_x86_64_pc_windows_gnu"
+          $env:Path = "$msys2\mingw64\bin;$msys2\usr\bin;" + $env:Path
+          Get-Item "$msys2\mingw64\bin\x86_64-w64-mingw32-gcc.exe" | Select-Object -ExpandProperty FullName
+          Get-Item "$msys2\mingw64\bin\ar.exe" | Select-Object -ExpandProperty FullName
+          npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+
+      - name: Build (Windows ARM64)
+        if: matrix.name == 'windows-arm64'
+        shell: pwsh
+        run: npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+
+      - name: Build (Linux)
+        if: matrix.platform == 'linux'
+        run: npm run tauri build -- --bundles ${{ matrix.bundles }}
+
+      - name: Build (macOS Universal)
+        if: matrix.platform == 'macos'
+        run: npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+
+      - name: Package macOS app bundle
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          cd src-tauri/target/universal-apple-darwin/release/bundle/macos
+          zip -ry SenTune.app.zip SenTune.app
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          if-no-files-found: error
+          path: ${{ matrix.artifact-paths }}
+
+  publish:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**
+          draft: true
+          generate_release_notes: true

@@ -1,0 +1,67 @@
+:root {
+  color-scheme: dark;
+  --bg: #1f1f22;
+  --window-bg: #121214;
+  --surface: #26262a;
+  --surface-elevated: #323238;
+  --surface-hover: #2c2c30;
+  --sidebar-bg: #161618;
+  --player-bg: #26262a;
+  --accent: #fa233b;
+  --accent-hover: #ff4d63;
+  --text-primary: #ffffff;
+  --text-secondary: #8e8e93;
+  --text-tertiary: #6b6b70;
+  --hairline: #2a2a2e;
+  --hairline-strong: #3a3a3e;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+  --cover-size: 160px;
+  --cover-size-lg: 320px;
+  --shadow-soft:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-island:
+    0 2px 6px rgba(0, 0, 0, 0.28),
+    0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-cover:
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 24px 64px rgba(0, 0, 0, 0.3);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --font-stack:
+    -apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui,
+    sans-serif;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f5f7;
+  --window-bg: #f5f5f7;
+  --surface: #ffffff;
+  --surface-elevated: #fbfbfd;
+  --surface-hover: #efeff3;
+  --sidebar-bg: #f0f0f2;
+  --player-bg: #ffffff;
+  --accent: #e02440;
+  --accent-hover: #c91f38;
+  --text-primary: rgba(0, 0, 0, 0.88);
+  --text-secondary: rgba(0, 0, 0, 0.56);
+  --text-tertiary: rgba(0, 0, 0, 0.36);
+  --hairline: rgba(0, 0, 0, 0.08);
+  --hairline-strong: rgba(0, 0, 0, 0.14);
+  --shadow-soft:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-island:
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.1);
+  --shadow-cover:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 12px 32px rgba(0, 0, 0, 0.12),
+    0 24px 64px rgba(0, 0, 0, 0.1);
+}
